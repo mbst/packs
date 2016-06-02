@@ -76,7 +76,7 @@ class PackImg < Sinatra::Base
       tempName = Dir.tmpdir() + "/" + SecureRandom.hex
       img.write(tempName)
       # Not ideal, but RMagick doesn't seem to expose the right API to do all of the below
-      if !system("convert #{tempName} -density 150 -threshold 60% -trim -monochrome \
+      if !system("convert #{tempName} -density 150 -threshold 60% -trim \
           -transparent black -fill \"#EBEBEB\" -enhance -opaque white #{tempName}-monocropped.png") ||
           !system("convert #{tempName}-monocropped.png -trim #{tempName}-monocropped.png")
         status 500
