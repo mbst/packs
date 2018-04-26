@@ -16,7 +16,7 @@ def http_fetch(uri_str, limit = 3)
 
   uri = URI.parse(uri_str)
   request = Net::HTTP::Get.new(uri.path, {'User-Agent' => 'MetaBroadcast image resizer'})
-  response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
+  response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') { |http| http.request(request) }
 
   case response
   when Net::HTTPRedirection then http_fetch(response['location'], limit - 1)
@@ -86,6 +86,27 @@ class PackImg < Sinatra::Base
       img = Image.read("#{tempName}-monocropped.png")[0]
       img.format = "png"
       FileUtils.rm("#{tempName}-monocropped.png")
+      FileUtils.rm("#{tempName}")
+    end
+
+    if params[:profile] == "sixteen-nine-blur"
+      minHeight = 576
+      tempName = Dir.tmpdir() + "/" + SecureRandom.hex
+      img.write(tempName)
+      height = `convert #{tempName} -format "%h" info:`.to_i
+      if height < minHeight
+        height = minHeight
+      end
+      width = (height * 16) / 9
+      if !system("convert #{tempName} \
+        \\( -clone 0 -resize #{width}x#{height}! -blur 0x20 -set option:modulate:colorspace hsb -modulate 100,75 \\) \
+        \\( -clone 0 -resize 0x#{height}^ -gravity center \\) -delete 0 -composite #{tempName}-sixteen-nine-blur.png")
+        status 500
+        return "Server Error"
+      end
+      img = Image.read("#{tempName}-sixteen-nine-blur.png")[0]
+      img.format = "png"
+      FileUtils.rm("#{tempName}-sixteen-nine-blur.png")
       FileUtils.rm("#{tempName}")
     end
     
