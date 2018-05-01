@@ -106,6 +106,8 @@ class PackImg < Sinatra::Base
       end
       img = Image.read("#{tempName}-sixteen-nine-blur.png")[0]
       img.format = "png"
+      headers \
+        "X-MBST-Image-Size" => `convert #{tempName}-sixteen-nine-blur.png -format "%wx%h" info:`
       FileUtils.rm("#{tempName}-sixteen-nine-blur.png")
       FileUtils.rm("#{tempName}")
     end
