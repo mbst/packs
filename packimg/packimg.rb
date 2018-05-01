@@ -109,6 +109,23 @@ class PackImg < Sinatra::Base
       FileUtils.rm("#{tempName}-sixteen-nine-blur.png")
       FileUtils.rm("#{tempName}")
     end
+
+    if params[:profile] == "sixteen-nine-blur-fixed-dimensions"
+      fixedWidth = 1024
+      fixedHeight = 576
+      tempName = Dir.tmpdir() + "/" + SecureRandom.hex
+      img.write(tempName)
+      if !system("convert #{tempName} \
+        \\( -clone 0 -resize #{fixedWidth}x#{fixedHeight}! -blur 0x20 -set option:modulate:colorspace hsb -modulate 100,75 \\) \
+        \\( -clone 0 -resize x#{fixedHeight} -gravity center \\) -delete 0 -composite #{tempName}-sixteen-nine-blur-fixed-dimensions.png")
+        status 500
+        return "Server Error"
+      end
+      img = Image.read("#{tempName}-sixteen-nine-blur-fixed-dimensions.png")[0]
+      img.format = "png"
+      FileUtils.rm("#{tempName}-sixteen-nine-blur-fixed-dimensions.png")
+      FileUtils.rm("#{tempName}")
+    end
     
     ops << ->(image) { image.rotate(params[:rotate].to_i) } if params[:rotate]
 
