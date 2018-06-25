@@ -43,7 +43,7 @@ class PackImg < Sinatra::Base
       # If we got an error from the source, pass on the http error code and body
       if response.code.to_i >= 300
         status response.code
-        response.body
+        return response.body
       end
 
       # Attempt load the body as an image
@@ -54,9 +54,9 @@ class PackImg < Sinatra::Base
       status 500
       return "Too many redirects fetching source image"
     rescue Magick::ImageMagickError
-      # image load failed, probably not an image
+      # image load failed
       status 500
-      return "No image at source"
+      return "Error processing source image"
     end
     
     ops = []
